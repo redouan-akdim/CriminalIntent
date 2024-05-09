@@ -5,12 +5,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bateman.hw7.databinding.FragmentCrimeDetailBinding
 import kotlinx.coroutines.launch
@@ -54,8 +57,25 @@ class CrimeDetailFragment : Fragment() {
         return binding.root
     }
 
+    private lateinit var onBackPressedCallback: OnBackPressedCallback
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Check if the crime title is not empty
+                if (!binding.crimeTitle.text.isNullOrBlank()) {
+                    findNavController().popBackStack()
+                }
+                else{
+                    Toast.makeText(requireContext(),"Please provide a description of the crime.",Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // Add the callbacks (for onBackPressed)
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressedCallback)
+
 
         binding.apply {
             crimeTitle.doOnTextChanged { text, _, _, _ ->
@@ -90,6 +110,8 @@ class CrimeDetailFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+
+        onBackPressedCallback.remove()
     }
 
     private fun updateUi(crime: Crime) {
